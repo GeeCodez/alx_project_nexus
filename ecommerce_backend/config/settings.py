@@ -34,6 +34,8 @@ INSTALLED_APPS = [
     'accounts',
     'rest_framework',
     'phonenumber_field',
+    'django_filters',
+    'products',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'
@@ -129,6 +131,7 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": (
+        "rest_framework.permissions.AllowAny",
         "rest_framework.permissions.IsAuthenticated",
     ),
     "DEFAULT_THROTTLE_CLASSES": (
@@ -137,7 +140,7 @@ REST_FRAMEWORK = {
     ),
     "DEFAULT_THROTTLE_RATES": {
         "user": "1000/day",  # Authenticated users
-        "anon": "10/minute",  # Unauthenticated endpoints (login/register)
+        "anon": "20/minute",  # Unauthenticated endpoints (login/register)
     },
 }
 
