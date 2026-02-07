@@ -33,6 +33,7 @@ INSTALLED_APPS = [
 
     'accounts',
     'rest_framework',
+    'drf_yasg',
     'phonenumber_field',
     'django_filters',
     'products',
