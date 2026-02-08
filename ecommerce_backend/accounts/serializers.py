@@ -1,3 +1,4 @@
+from sys import exception
 from rest_framework import serializers
 from .models import User
 from django.db.models import Q
@@ -36,8 +37,11 @@ class LoginSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True)
 
     def validate(self, attrs):
-        identifier = attrs.get("identifier")
-        password = attrs.get("password")
+        try:
+            identifier = attrs.get("identifier")
+            password = attrs.get("password")
+        except exception as e:
+            return "Failed to get login credentials"
 
         user = User.objects.filter(
             Q(username=identifier)
