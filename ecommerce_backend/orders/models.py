@@ -2,6 +2,7 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 from decimal import Decimal
+from products.models import Product
 
 class Order(models.Model):
     class Status(models.TextChoices):
@@ -24,6 +25,15 @@ class Order(models.Model):
         ordering = ["-created_at"]
         indexes = [models.Index(fields=["user", "status"]), models.Index(fields=["created_at"])]
 
+    def cancel(self):
+        if self.status in {"shipped", "delivered"}:
+            raise ValueError("Cannot cancel shipped or delivered order")
+        if self.status == "cancelled":
+            raise ValueError("Order already cancelled")
+
+        self.status = "cancelled"
+        self.save(update_fields=["status"])
+
     def __str__(self):
         return f"Order {self.id} - {self.user}"
     
@@ -31,7 +41,7 @@ class OrderItem(models.Model):
     
     id = models.BigAutoField(primary_key=True)
     order = models.ForeignKey("orders.Order", on_delete=models.CASCADE, related_name="items")
-    product = models.ForeignKey("products.Product", on_delete=models.PROTECT, related_name="order_items")
+    product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name="order_items")
     product_name = models.CharField(max_length=255)
     quantity = models.PositiveIntegerField()
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -41,7 +51,7 @@ class OrderItem(models.Model):
         indexes = [models.Index(fields=["order"]), models.Index(fields=["product"])]
 
     def save(self, *args, **kwargs):
-        self.total_price = Decimal(str(self.quantity)) * self.unit_price
+        self.total_price = Decimal(self.quantity) * self.unit_price
         super().save(*args, **kwargs)
 
     def __str__(self):

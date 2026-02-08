@@ -33,12 +33,12 @@ class OrderItemReadSerializer(serializers.ModelSerializer):
 
 class OrderSerializer(serializers.ModelSerializer):
 
-    items = OrderItemWriteSerializer(many=True, write_only=True)
+    items = OrderItemWriteSerializer(many=True, write_only=True) #for write operitions
     order_items = OrderItemReadSerializer(
         source="items",
         many=True,
         read_only=True
-    )
+    ) # for read operations
 
     class Meta:
         model = Order
@@ -61,52 +61,56 @@ class OrderSerializer(serializers.ModelSerializer):
         )
 
     def create(self, validated_data):
-
         items_data = validated_data.pop("items")
         user = self.context["request"].user
 
-        with transaction.atomic():
+        if not items_data:
+            raise serializers.ValidationError(
+                {"items": "Order must contain at least one item."}
+            )
 
+        with transaction.atomic():
             order = Order.objects.create(
                 user=user,
                 currency="GHS",
-                total_amount=Decimal("0.00")
+                total_amount=Decimal("0.00"),
             )
 
             total_order_amount = Decimal("0.00")
+            order_items = []
 
-            order_items_to_create = []
+            products = {
+                p.id: p # type: ignore
+                for p in Product.objects.filter(
+                    id__in=[item["product_id"] for item in items_data]
+                )
+            }
 
             for item in items_data:
-
-                product = Product.objects.select_for_update().get(
-                    id=item["product_id"]
-                )
-
-                quantity = item["quantity"]
-
-                if product.stock < quantity:
+                product = products.get(item["product_id"])
+                if not product:
                     raise serializers.ValidationError(
-                        f"Insufficient stock for {product.name}"
+                        {"items": f"Invalid product ID {item['product_id']}"}
                     )
 
+                quantity = item["quantity"]
                 unit_price = product.price
                 total_price = unit_price * quantity
 
                 total_order_amount += total_price
 
-                order_items_to_create.append(
+                order_items.append(
                     OrderItem(
                         order=order,
                         product=product,
                         product_name=product.name,
                         quantity=quantity,
                         unit_price=unit_price,
-                        total_price=total_price
+                        total_price=total_price,
                     )
                 )
 
-            OrderItem.objects.bulk_create(order_items_to_create)
+            OrderItem.objects.bulk_create(order_items)
 
             order.total_amount = total_order_amount
             order.save(update_fields=["total_amount"])
