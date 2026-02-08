@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'phonenumber_field',
     'django_filters',
     'products',
+    'orders',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'
