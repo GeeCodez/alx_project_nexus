@@ -24,9 +24,9 @@ urlpatterns = [
     path("api/auth/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/auth/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("api/accounts/", include("accounts.urls")),
-    path('api/', include('products.urls')),
+    path('api/products/', include('products.urls')),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
-    path('api/', include('orders.urls')),
+    path('api/orders/', include('orders.urls')),
     path("api/payments/", include("payments.urls")),
 ]

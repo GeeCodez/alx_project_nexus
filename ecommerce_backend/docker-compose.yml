@@ -1,0 +1,25 @@
+services:
+  redis:
+    image: redis:latest
+    # redis_data
+    container_name: project_nexus_redis_cache
+    ports:
+    - "6379:6379"
+
+  postgres:
+    # postgres:latest
+    image: postgres:15
+    container_name: project_nexus_db
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - project_nexus_data:/var/lib/postgresql/data
+
+volumes:
+  project_nexus_data:
