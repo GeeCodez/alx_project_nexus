@@ -37,10 +37,10 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
         products=get_all_products()
         products=self.filter_queryset(products)
 
-        page=self.paginate_queryset(products)
-        if page is not None:
-            serializer = self.get_serializer(page,many=True)
-            return self.get_paginated_response(serializer.data)
+        # page=self.paginate_queryset(products)
+        # if page is not None:
+        #     serializer = self.get_serializer(page,many=True)
+        #     return self.get_paginated_response(serializer.data)
 
-        serializer=self.get_serializer(products,many=True)
-        return Response(serializer.data)
+        # serializer=self.get_serializer(products,many=True)
+        # return Response(serializer.data)

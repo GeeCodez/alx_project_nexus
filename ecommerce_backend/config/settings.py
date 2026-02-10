@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'orders',
     'payments',
     'django_redis',
+    'django_celery_results',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'
@@ -168,3 +169,13 @@ CACHES = {
         }
     }
 }
+
+CELERY_BROKER_URL = "amqp://guest:guest@localhost:5672//"
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = TIME_ZONE
+
+CELERY_RESULT_BACKEND = "django-db"
+
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+DEFAULT_FROM_EMAIL = "no-reply@ecommerce.com"

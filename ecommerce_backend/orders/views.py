@@ -8,6 +8,7 @@ from django.db.models import Prefetch
 
 from .models import Order, OrderItem
 from .serializers import OrderSerializer
+from .tasks import send_order_confirmation_email
 
 class OrderViewSet(
     mixins.ListModelMixin,

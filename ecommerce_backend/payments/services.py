@@ -5,6 +5,7 @@ from .models import Payment
 from django.db import transaction
 import hmac
 import hashlib
+from orders.tasks import send_order_confirmation_email
 
 
 def generate_payment_reference():
@@ -77,6 +78,16 @@ def process_paystack_webhook(event_data):
                 order.status = "paid"
                 order.payment_reference = reference
                 order.save(update_fields=["status", "payment_reference"])
+                
+                email=order.user.email #type: ignore
+                if email:
+                    send_order_confirmation_email.delay(
+                        user_email=email,
+                        order_id=order.id
+                    ) # type: ignore
+                else:
+                    pass
+
             else:
                 payment.status = Payment.Status.FAILED
                 payment.provider_response = verification
