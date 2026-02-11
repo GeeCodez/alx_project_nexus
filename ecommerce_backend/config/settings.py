@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'payments',
     'django_redis',
     'django_celery_results',
+    # 'iptracking',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'
@@ -51,6 +52,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # 'iptracking.middleware.IPLoggingMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -179,3 +181,40 @@ CELERY_RESULT_BACKEND = "django-db"
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 DEFAULT_FROM_EMAIL = "no-reply@ecommerce.com"
+
+
+# REDIS_HOST = "localhost" 
+# REDIS_PORT = 6379
+# REDIS_DB_BLACKLIST = 2
+
+
+# LOGGING = {
+#     "version": 1,
+#     "disable_existing_loggers": False,
+#     "formatters": {
+#         "verbose": {
+#             "format": "[{levelname}] {asctime} {name} {message}",
+#             "style": "{",
+#         },
+#     },
+#     "handlers": {
+#         "ip_tracking_file": {
+#             "level": "INFO",
+#             "class": "logging.FileHandler",
+#             "filename": "ip_tracking.log",
+#             "formatter": "verbose",
+#         },
+#         "console": {
+#             "level": "INFO",
+#             "class": "logging.StreamHandler",
+#             "formatter": "verbose",
+#         },
+#     },
+#     "loggers": {
+#         "iptracking": {
+#             "handlers": ["ip_tracking_file", "console"],
+#             "level": "INFO",
+#             "propagate": False,
+#         },
+#     },
+# }

@@ -5,9 +5,15 @@ from rest_framework.permissions import AllowAny
 
 class APIRootView(APIView):
     permission_classes = [AllowAny]
+    
 
     def get(self, request, *args, **kwargs):
+        """
+        Return the main API endpoints as JSON.
+        """
         return Response({
+            "swagger": request.build_absolute_uri("/swagger/"),
+            "redoc": request.build_absolute_uri("/redoc/"),
             "products": request.build_absolute_uri("/api/products/"),
             "orders": request.build_absolute_uri("/api/orders/"),
             "payments": request.build_absolute_uri("/api/payments/"),
