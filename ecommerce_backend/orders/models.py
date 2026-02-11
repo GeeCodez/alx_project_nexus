@@ -51,7 +51,11 @@ class OrderItem(models.Model):
         indexes = [models.Index(fields=["order"]), models.Index(fields=["product"])]
 
     def save(self, *args, **kwargs):
-        self.total_price = Decimal(self.quantity) * self.unit_price
+        if self.quantity is not None and self.unit_price is not None:
+            self.total_price = Decimal(self.quantity) * self.unit_price
+        else:
+            self.total_price = Decimal("0.00")
+
         super().save(*args, **kwargs)
 
     def __str__(self):

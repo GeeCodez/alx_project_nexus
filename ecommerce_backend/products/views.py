@@ -1,4 +1,4 @@
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, views
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 from .models import Category, Product
@@ -9,6 +9,16 @@ from django.utils.decorators import method_decorator
 from .utils import get_all_products
 from rest_framework.response import Response
 
+
+class PublicAPIView(views.APIView):
+    permission_classes = [permissions.AllowAny]
+    def get(self, request, format=None):
+        return Response({
+            "message": "Welcome to the public API endpoint. This endpoint is accessible without authentication.",
+            "products": request.build_absolute_uri("products/"),
+            "categories": request.build_absolute_uri("categories/"),
+        })
+    
 @method_decorator(cache_page(60*15),name="list")
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Category.objects.all()
@@ -37,10 +47,10 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
         products=get_all_products()
         products=self.filter_queryset(products)
 
-        # page=self.paginate_queryset(products)
-        # if page is not None:
-        #     serializer = self.get_serializer(page,many=True)
-        #     return self.get_paginated_response(serializer.data)
+        page=self.paginate_queryset(products)
+        if page is not None:
+            serializer = self.get_serializer(page,many=True)
+            return self.get_paginated_response(serializer.data)
 
-        # serializer=self.get_serializer(products,many=True)
-        # return Response(serializer.data)
+        serializer=self.get_serializer(products,many=True)
+        return Response(serializer.data)
