@@ -162,59 +162,23 @@ PAYSTACK_SECRET_KEY = os.getenv("PAYSTACK_SECRET_KEY")
 PAYSTACK_PUBLIC_KEY = os.getenv("PAYSTACK_PUBLIC_KEY")
 PAYSTACK_WEBHOOK_SECRET = os.getenv("PAYSTACK_SECRET_KEY")
 
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://localhost:6379/1",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
-    }
-}
-
-CELERY_BROKER_URL = "amqp://guest:guest@localhost:5672//"
-CELERY_TASK_SERIALIZER = "json"
-CELERY_RESULT_SERIALIZER = "json"
-CELERY_TIMEZONE = TIME_ZONE
-
-CELERY_RESULT_BACKEND = "django-db"
-
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-DEFAULT_FROM_EMAIL = "no-reply@ecommerce.com"
-
-
-# REDIS_HOST = "localhost" 
-# REDIS_PORT = 6379
-# REDIS_DB_BLACKLIST = 2
-
-
-# LOGGING = {
-#     "version": 1,
-#     "disable_existing_loggers": False,
-#     "formatters": {
-#         "verbose": {
-#             "format": "[{levelname}] {asctime} {name} {message}",
-#             "style": "{",
-#         },
-#     },
-#     "handlers": {
-#         "ip_tracking_file": {
-#             "level": "INFO",
-#             "class": "logging.FileHandler",
-#             "filename": "ip_tracking.log",
-#             "formatter": "verbose",
-#         },
-#         "console": {
-#             "level": "INFO",
-#             "class": "logging.StreamHandler",
-#             "formatter": "verbose",
-#         },
-#     },
-#     "loggers": {
-#         "iptracking": {
-#             "handlers": ["ip_tracking_file", "console"],
-#             "level": "INFO",
-#             "propagate": False,
-#         },
-#     },
+# CACHES = {
+#     "default": {
+#         "BACKEND": "django_redis.cache.RedisCache",
+#         "LOCATION": "redis://localhost:6379/1",
+#         "OPTIONS": {
+#             "CLIENT_CLASS": "django_redis.client.DefaultClient",
+#         }
+#     }
 # }
+
+# CELERY_BROKER_URL = "amqp://guest:guest@localhost:5672//"
+# CELERY_TASK_SERIALIZER = "json"
+# CELERY_RESULT_SERIALIZER = "json"
+# CELERY_TIMEZONE = TIME_ZONE
+
+# CELERY_RESULT_BACKEND = "django-db"
+
+# EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+# DEFAULT_FROM_EMAIL = "no-reply@ecommerce.com"
+

@@ -6,10 +6,10 @@ from .models import Product
 CACHE_KEY="all_products"
 
 @receiver(post_save,sender=Product)
-def clear_products_cache_on_save(sender,instanc,**kwargs):
+def clear_products_cache_on_save(sender,instance,created,**kwargs):
     cache.delete(CACHE_KEY)
 
 @receiver(post_delete,sender=Product)
-def clear_products_cache_on_delete(sender,instanc,**kwargs):
+def clear_products_cache_on_delete(sender,instance,created,**kwargs):
     cache.delete(CACHE_KEY)
 

@@ -7,3 +7,5 @@ venv/
 .pytest_cache/
 .vscode/
 iptracking/
+Project_Demo_Video.mp4
+*.png
