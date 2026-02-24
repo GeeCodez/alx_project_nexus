@@ -9,3 +9,4 @@ venv/
 iptracking/
 Project_Demo_Video.mp4
 *.png
+.gitignore

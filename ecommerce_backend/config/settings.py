@@ -147,6 +147,7 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "user": "1000/day",  # Authenticated users
         "anon": "20/minute",  # Unauthenticated endpoints (login/register)
+        "otp": "5/minute",  # OTP verification attempts
     },
 }
 
@@ -179,6 +180,17 @@ PAYSTACK_WEBHOOK_SECRET = os.getenv("PAYSTACK_SECRET_KEY")
 
 # CELERY_RESULT_BACKEND = "django-db"
 
-# EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-# DEFAULT_FROM_EMAIL = "no-reply@ecommerce.com"
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
 
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+
+#messaging configuration
+AFRICASTALKING_USERNAME = os.getenv("AFRICASTALKING_USERNAME")
+AFRICASTALKING_API_KEY = os.getenv("AFRICASTALKING_API_KEY")
