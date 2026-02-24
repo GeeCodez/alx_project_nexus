@@ -13,9 +13,9 @@ OTP_EXPIRY_MINUTES = 5
 OTP_MAX_ATTEMPTS = 3
 OTP_RESEND_COOLDOWN = 60  # seconds
 
-def generate_otp(length=6):
-    return "".join([str(random.randint(0, 9)) for _ in range(length)])
-
+def generate_otp():
+    return str(random.randint(100000,999999))
+    
 def send_otp_email(email, code):
     subject = "Your Verification Code"
     message = f"Your OTP code is {code}. It expires in 5 minutes."

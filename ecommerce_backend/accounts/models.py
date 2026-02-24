@@ -108,7 +108,7 @@ class OTP(models.Model):
     email = models.EmailField(null=True, blank=True)
     phone_number = PhoneNumberField(null=True, blank=True)
 
-    code = models.CharField(max_length=8)
+    code = models.CharField(max_length=255)
     purpose = models.CharField(max_length=20, choices=PURPOSE_CHOICES)
 
     is_used = models.BooleanField(default=False)
