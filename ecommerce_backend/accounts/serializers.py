@@ -4,9 +4,6 @@ from .models import User
 from django.db.models import Q
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.tokens import RefreshToken
-from .utils import create_and_send_otp, verify_otp
-
-
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
 

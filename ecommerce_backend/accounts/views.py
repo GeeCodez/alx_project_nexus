@@ -1,11 +1,12 @@
-import email
 from .models import User
 from rest_framework.throttling import AnonRateThrottle
 from .throttles import OTPThrottle
-# from .permissions import AnonymousOnly
 from rest_framework import generics, permissions
 from rest_framework.response import Response
 from .utils import create_and_send_otp, verify_otp, check_otp_cooldown
+from rest_framework.views import APIView
+from rest_framework import status
+from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import(
     RegisterSerializer,
     LoginSerializer,
@@ -48,7 +49,26 @@ class LoginView(generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         return Response(serializer.validated_data)
-    
+
+class LogoutView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        try:
+            refresh_token = request.data["refresh"]
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+
+            return Response(
+                {"message": "Logout successful"},
+                status=status.HTTP_205_RESET_CONTENT
+            )
+        except Exception as e:
+            return Response(
+                {"error": "Invalid token"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
 class MeView(generics.RetrieveAPIView):
     serializer_class = UserSerializer
 

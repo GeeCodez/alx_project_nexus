@@ -32,10 +32,10 @@ urlpatterns = [
     path('swagger.yaml/', schema_view.without_ui(cache_timeout=0), name='schema-yaml'),
 
 
-    path('api/', include('orders.urls')),
-    path("api/", include("payments.urls")),
-    path("api/", include("accounts.urls")),
-    path('api/', include('products.urls')),
+    path('api/orders/', include('orders.urls')),
+    path("api/payments/", include("payments.urls")),
+    path("api/accounts/", include("accounts.urls")),
+    path('api/products/', include('products.urls')),
     
     path("", APIRootView.as_view(), name="api-root"),
 ]

@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'payments',
     'django_redis',
     'django_celery_results',
+    'rest_framework_simplejwt.token_blacklist',
     # 'iptracking',
 ]
 
@@ -157,6 +158,8 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "AUTH_HEADER_TYPES": ("Bearer",),
+    "ROTATE_REFRESH_TOKENS":True,
+    "BLACKLIST_AFTER_ROTATION": True,
 }
 
 PAYSTACK_SECRET_KEY = os.getenv("PAYSTACK_SECRET_KEY")
