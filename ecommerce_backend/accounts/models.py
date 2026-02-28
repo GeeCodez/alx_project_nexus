@@ -5,7 +5,6 @@ from django.contrib.auth.models import (
 )
 from django.db import models
 from django.utils import timezone
-from datetime import timedelta
 from phonenumber_field.modelfields import PhoneNumberField
 
 
@@ -22,8 +21,8 @@ class UserManager(BaseUserManager):
         if not password:
             raise ValueError("Password is required.")
 
-        if not (email or phone_number):
-            raise ValueError("Either email or phone number is required.")
+        # if not (email or phone_number):
+        #     raise ValueError("Either email or phone number is required.")
 
         if email:
             email = self.normalize_email(email)
@@ -75,18 +74,18 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = "username"
     REQUIRED_FIELDS = []
     def __str__(self):
-        return self.username and (self.email or self.phone_number)
+        return self.username and (self.email if self.email else str(self.phone_number))
 
     class Meta:
         constraints = [
             models.UniqueConstraint(
                 fields=["email"],
-                condition=~models.Q(email=None),
+                condition=~models.Q(email__isnull=False),
                 name="unique_email_when_not_null",
             ),
             models.UniqueConstraint(
                 fields=["phone_number"],
-                condition=~models.Q(phone_number=None),
+                condition=~models.Q(phone_number__isnull=False),
                 name="unique_phone_when_not_null",
             ),
         ]
@@ -121,4 +120,4 @@ class OTP(models.Model):
         return timezone.now() > self.expires_at
 
     def __str__(self):
-        return f"{self.purpose} OTP for {self.email or self.phone_number}"
+        return f"{self.purpose} OTP for {self.email if self.email else str(self.phone_number) or None}"

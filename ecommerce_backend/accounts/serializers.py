@@ -1,9 +1,6 @@
-from sys import exception
 from rest_framework import serializers
 from .models import User
-from django.db.models import Q
-from rest_framework.exceptions import AuthenticationFailed
-from rest_framework_simplejwt.tokens import RefreshToken
+
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
 
@@ -21,7 +18,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         if not (email or phone):
             raise serializers.ValidationError(
-                {"contact": "Provide either email or phone number."}
+                {"contact": "Either email or phone number is required"}
             )
 
         if email and User.objects.filter(email=email).exists():
@@ -37,46 +34,35 @@ class RegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Password must be at least 8 characters long.")
         return value
     
+    def create(self, validated_data):
+        if not validated_data.get("phone_number"):
+            validated_data["phone_number"]=None
+        if not validated_data.get("email"):
+            validated_data["email"]=None
+            
+        password = validated_data.pop("password")
+        user = User(**validated_data)
+        user.set_password(password)
+        user.save()
+        return user
 
 class LoginSerializer(serializers.Serializer):
     identifier = serializers.CharField()
     password = serializers.CharField(write_only=True)
 
     def validate(self, attrs):
-        identifier = attrs.get("identifier")
-        password = attrs.get("password")
-
-        if not identifier or not password:
-            raise AuthenticationFailed("Identifier and password required")
-
-        user = User.objects.filter(
-            Q(username=identifier)
-            | Q(email=identifier)
-            | Q(phone_number=identifier)
-        ).first()
-
-        if not user or not user.check_password(password):
-            raise AuthenticationFailed("Invalid credentials")
-
-        if not user.is_active:
-            raise AuthenticationFailed("Account not verified")
-
-        refresh = RefreshToken.for_user(user)
-
-        return {
-            "access": str(refresh.access_token),
-            "refresh": str(refresh),
-        }
-
+        if not attrs.get("identifier") or not attrs.get("password"):
+            raise serializers.ValidationError("Identifier and password required")
+        return attrs
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ("id", "username", "email", "phone_number", "date_joined")
 
-
 class VerifyOTPSerializer(serializers.Serializer):
     email = serializers.EmailField()
     code = serializers.CharField(max_length=6)
+
 class ResendOTPSerializer(serializers.Serializer):
     email = serializers.EmailField()

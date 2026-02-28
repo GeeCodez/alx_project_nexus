@@ -1,5 +1,3 @@
-import django
-from django.core.mail import send_mail
 import africastalking
 from django.conf import settings
 import random
@@ -7,7 +5,7 @@ from django.contrib.auth.hashers import make_password, check_password
 from accounts.models import OTP
 from datetime import timedelta
 from django.utils import timezone
-from .models import OTP
+from accounts.infrastructure.email_service import EmailService
 
 OTP_EXPIRY_MINUTES = 5
 OTP_MAX_ATTEMPTS = 3
@@ -15,18 +13,6 @@ OTP_RESEND_COOLDOWN = 60  # seconds
 
 def generate_otp():
     return str(random.randint(100000,999999))
-    
-def send_otp_email(email, code):
-    subject = "Your Verification Code"
-    message = f"Your OTP code is {code}. It expires in 5 minutes."
-
-    send_mail(
-        subject,
-        message,
-        settings.DEFAULT_FROM_EMAIL,
-        [email],
-        fail_silently=False,
-    )
 
 def create_and_send_otp(email=None, purpose="registration"):
     # invalidate old OTPs
@@ -42,10 +28,9 @@ def create_and_send_otp(email=None, purpose="registration"):
         expires_at=expires_at,
     )
     try:
-        send_otp_email(email, code)
+        EmailService.send_otp_email(email, code)
     except Exception as e:
-        print(f"Failed to send OTP email to {email}: {e}")
-        # logger.error(f"Failed to send OTP email to {email}: {e}")
+        return f"Failed to send OTP email to {email}: {e}"
     return otp
     #to be assigned to celery later
 

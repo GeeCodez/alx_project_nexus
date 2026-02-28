@@ -1,12 +1,10 @@
-from .models import User
 from rest_framework.throttling import AnonRateThrottle
 from .throttles import OTPThrottle
 from rest_framework import generics, permissions
 from rest_framework.response import Response
-from .utils import create_and_send_otp, verify_otp, check_otp_cooldown
+from accounts.services.auth_services import AuthService
 from rest_framework.views import APIView
 from rest_framework import status
-from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import(
     RegisterSerializer,
     LoginSerializer,
@@ -31,8 +29,7 @@ class RegisterView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
 
     def perform_create(self, serializer):
-        user = serializer.save(is_active=False)
-        create_and_send_otp(email=user.email, purpose="registration")
+        user = AuthService.register_user(serializer)
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -48,26 +45,21 @@ class LoginView(generics.GenericAPIView):
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        return Response(serializer.validated_data)
+        token=AuthService.login(**serializer.validated_data)
+        return Response(token)
 
 class LogoutView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        try:
-            refresh_token = request.data["refresh"]
-            token = RefreshToken(refresh_token)
-            token.blacklist()
+        refresh_token=request.data["refresh"]
+        
+        success, message=AuthService.logout_user(refresh_token)
 
-            return Response(
-                {"message": "Logout successful"},
-                status=status.HTTP_205_RESET_CONTENT
-            )
-        except Exception as e:
-            return Response(
-                {"error": "Invalid token"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        if not success:
+            return Response({"message": message}, status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response({"message": message}, status.HTTP_205_RESET_CONTENT)
 
 class MeView(generics.RetrieveAPIView):
     serializer_class = UserSerializer
@@ -85,19 +77,12 @@ class VerifyOTPView(generics.GenericAPIView):
         email = serializer.validated_data["email"]
         code = serializer.validated_data["code"]
 
-        success, message = verify_otp(email, code, "registration")
+        success, message = AuthService.verify_registration_otp(email,code)
 
         if not success:
             return Response({"error": message}, status=400)
 
-        try:
-            user = User.objects.get(email=email)
-        except User.DoesNotExist:
-            return Response({"error": "User not found"}, status=404)
-        user.is_active = True
-        user.save(update_fields=["is_active"])
-
-        return Response({"message": "Account verified successfully"})
+        return Response({"message": message})
 
 class ResendOTPView(generics.GenericAPIView):
     serializer_class = ResendOTPSerializer
@@ -110,17 +95,12 @@ class ResendOTPView(generics.GenericAPIView):
 
         email = serializer.validated_data["email"]
 
-        allowed, retry_after = check_otp_cooldown(email, "registration")
+        allowed, data = AuthService.resend_registration_otp(email)
 
         if not allowed:
             return Response(
-                {
-                    "error": "OTP recently sent",
-                    "retry_after": retry_after
-                },
+                data,
                 status=429
             )
 
-        create_and_send_otp(email=email, purpose="registration")
-
-        return Response({"message": "OTP resent successfully"})
+        return Response(data)
