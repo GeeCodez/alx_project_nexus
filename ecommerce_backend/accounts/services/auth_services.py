@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.db.models import Q
 from django.db import transaction
 from rest_framework_simplejwt.exceptions import AuthenticationFailed
-from accounts.services.otp_service import OTPService
+from accounts.services.otp_services import OTPService
 from rest_framework_simplejwt.tokens import RefreshToken
 
 User = get_user_model()
@@ -20,40 +20,15 @@ class AuthService:
         return user
 
     @staticmethod
-    def verify_registration_otp(email, code):
-        """
-        Verify OTP and activate user
-        """
-        success, message = OTPService.verify_registration_otp(email, code)
-
-        if not success:
-            return False, message
-
+    def logout_user(refresh_token):
+        if not refresh_token:
+            raise ValueError("Token must be provided")
         try:
-            user = User.objects.get(email=email)
-        except User.DoesNotExist:
-            return False, "User not found"
-
-        user.is_active = True
-        user.save(update_fields=["is_active"])
-
-        return True, "Account verified successfully"
-
-    @staticmethod
-    def resend_registration_otp(email):
-        """
-        Resend OTP with cooldown check
-        """
-        allowed, retry_after = OTPService.check_registration_cooldown(email)
-
-        if not allowed:
-            return False, {
-                "error": "OTP recently sent",
-                "retry_after": retry_after
-            }
-
-        OTPService.send_registration_otp(email=email)
-        return True, {"message": "OTP resent successfully"}
+            token= RefreshToken(refresh_token)
+            token.blacklist()
+            return True,"Logout successful"
+        except Exception as e:
+            return False, "Invalid token or token expired"
     
     @staticmethod
     def login(identifier,password):
@@ -73,14 +48,3 @@ class AuthService:
             "refresh": str(refresh),
             "access": str(refresh.access_token),
         }
-
-    @staticmethod
-    def logout_user(refresh_token):
-        if not refresh_token:
-            raise ValueError("Token must be provided")
-        try:
-            token= RefreshToken(refresh_token)
-            token.blacklist()
-            return True,"Logout successful"
-        except Exception as e:
-            return False, "Invalid token or token expired"

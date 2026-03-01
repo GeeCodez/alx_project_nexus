@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User
+from accounts.models import User
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
@@ -59,10 +59,3 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ("id", "username", "email", "phone_number", "date_joined")
-
-class VerifyOTPSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    code = serializers.CharField(max_length=6)
-
-class ResendOTPSerializer(serializers.Serializer):
-    email = serializers.EmailField()

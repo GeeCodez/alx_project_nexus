@@ -1,28 +1,15 @@
 from rest_framework.throttling import AnonRateThrottle
-from .throttles import OTPThrottle
 from rest_framework import generics, permissions
 from rest_framework.response import Response
 from accounts.services.auth_services import AuthService
 from rest_framework.views import APIView
 from rest_framework import status
-from .serializers import(
+from accounts.serializers.auth_serializers import(
     RegisterSerializer,
     LoginSerializer,
-    VerifyOTPSerializer,
     UserSerializer,
-    ResendOTPSerializer
 )
 
-
-class APIRootView(generics.GenericAPIView):
-    permission_classes = [permissions.AllowAny]
-
-    def get(self, request, *args, **kwargs):
-        return Response({
-            "register": request.build_absolute_uri("/api/accounts/register/"),
-            "login": request.build_absolute_uri("/api/accounts/login/"),
-            "me": request.build_absolute_uri("/api/accounts/me/"),
-        })
 
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
@@ -66,41 +53,3 @@ class MeView(generics.RetrieveAPIView):
 
     def get_object(self):
         return self.request.user
-class VerifyOTPView(generics.GenericAPIView):
-    serializer_class = VerifyOTPSerializer
-    permission_classes = [permissions.AllowAny]
-
-    def post(self, request):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        email = serializer.validated_data["email"]
-        code = serializer.validated_data["code"]
-
-        success, message = AuthService.verify_registration_otp(email,code)
-
-        if not success:
-            return Response({"error": message}, status=400)
-
-        return Response({"message": message})
-
-class ResendOTPView(generics.GenericAPIView):
-    serializer_class = ResendOTPSerializer
-    permission_classes = [permissions.AllowAny]
-    throttle_classes = [OTPThrottle]
-
-    def post(self, request):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        email = serializer.validated_data["email"]
-
-        allowed, data = AuthService.resend_registration_otp(email)
-
-        if not allowed:
-            return Response(
-                data,
-                status=429
-            )
-
-        return Response(data)

@@ -1,8 +1,7 @@
-import africastalking
 from django.conf import settings
 import random
 from django.contrib.auth.hashers import make_password, check_password
-from accounts.models import OTP
+from accounts.models.otp_models import OTP
 from datetime import timedelta
 from django.utils import timezone
 from accounts.infrastructure.email_service import EmailService
@@ -15,7 +14,6 @@ def generate_otp():
     return str(random.randint(100000,999999))
 
 def create_and_send_otp(email=None, purpose="registration"):
-    # invalidate old OTPs
     OTP.objects.filter(email=email, purpose=purpose, is_used=False).update(is_used=True)
 
     code = generate_otp()
@@ -23,16 +21,17 @@ def create_and_send_otp(email=None, purpose="registration"):
 
     otp = OTP.objects.create(
         email=email,
-        code=make_password(str(code)),
+        otp=make_password(str(code)),
         purpose=purpose,
         expires_at=expires_at,
     )
     try:
-        EmailService.send_otp_email(email, code)
+        EmailService.send_otp_email(email, code, purpose) # type: ignore
     except Exception as e:
         return f"Failed to send OTP email to {email}: {e}"
     return otp
-    #to be assigned to celery later
+    
+
 
 def verify_otp(email, code, purpose="registration"):
     otp = OTP.objects.filter(
@@ -50,7 +49,7 @@ def verify_otp(email, code, purpose="registration"):
     if otp.attempts >= OTP_MAX_ATTEMPTS:
         return False, "Too many attempts"
 
-    if not check_password(str(code), otp.code):
+    if not check_password(str(code), otp.otp):
         otp.attempts += 1
         otp.save()
         return False, "Invalid OTP"
@@ -65,6 +64,7 @@ def verify_otp(email, code, purpose="registration"):
     otp.save()
 
     return True, "OTP verified"
+
 
 def check_otp_cooldown(email, purpose="registration"):
     last_otp = OTP.objects.filter(
@@ -82,26 +82,3 @@ def check_otp_cooldown(email, purpose="registration"):
         return False, retry_after
 
     return True, 0
-
-# africastalking.initialize(
-#     username=settings.AFRICASTALKING_USERNAME,
-#     api_key=settings.AFRICASTALKING_API_KEY,
-# )
-
-# sms = africastalking.SMS
-
-
-# def send_otp_sms(phone_number, code):
-#     message = f"Your OTP code is {code}. It expires in 5 minutes."
-
-#     try:
-#         response = sms.send( # type: ignore
-#             message,
-#             [str(phone_number)],
-#             enqueue=True   # important fix
-#         ) #type: ignore
-#         print(response)
-#         return response
-#     except Exception as e:
-#         print("SMS sending failed:", e)
-#         return None

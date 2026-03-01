@@ -4,8 +4,8 @@ from django.conf import settings
 class EmailService:
     
     @staticmethod
-    def send_otp_email(email, code):
-        subject = "Your Verification Code"
+    def send_otp_email(email, code, purpose):
+        subject = f"{purpose} Verification Code"
         message = f"Your OTP code is {code}. It expires in 5 minutes."
 
         send_mail(
