@@ -1,48 +1,27 @@
-import random
+import random,secrets
 from django.contrib.auth import get_user_model
-from django.contrib.auth.hashers import make_password, check_password
 from django.utils import timezone
-from datetime import timedelta
+from django.contrib.auth.hashers import make_password, check_password
 from django.db import transaction
-
+from accounts.utils import verify_otp,create_and_send_otp
 from accounts.models.otp_models import OTP
 from accounts.infrastructure.email_service import EmailService
 
 User = get_user_model()
-
+purpose="password_reset"
 OTP_EXPIRY_MINUTES = 5
 OTP_MAX_ATTEMPTS = 3
 
 def generate_otp():
     return str(random.randint(100000, 999999))
 
-@transaction.atomic
 def request_password_reset(email):
     user = User.objects.filter(email=email).first()
 
     if not user:
         return True, "If this email exists, an OTP has been sent."
 
-    OTP.objects.filter(
-        user=user,
-        is_used=False
-    ).update(is_used=True)
-
-    raw_otp = generate_otp()
-    purpose="Password reset"
-    otp_obj = OTP.objects.create(
-        user=user,
-        otp=make_password(raw_otp),
-        expires_at=timezone.now() + timedelta(minutes=OTP_EXPIRY_MINUTES)
-    )
-
-    try:
-        EmailService.send_otp_email(email, raw_otp, purpose) #type:ignore
-    except Exception:
-        otp_obj.lock()
-        return False, "Failed to send OTP."
-
-    return True, "If this email exists, an OTP has been sent."
+    return create_and_send_otp(email,purpose)
 
 @transaction.atomic
 def verify_password_reset_otp(email, code, purpose='password_reset'):
@@ -50,51 +29,52 @@ def verify_password_reset_otp(email, code, purpose='password_reset'):
     if not user:
         return False, "Invalid OTP."
 
-    otp_obj = (
-        OTP.objects
-        .filter(user=user, is_used=False)
-        .order_by("-created_at")
-        .first()
-    )
+    success, message = verify_otp(email, code, purpose)
 
-    if not otp_obj:
-        return False, "Invalid OTP."
+    if not success:
+        return False, message
 
-    if otp_obj.is_expired():
-        otp_obj.lock()
-        return False, "OTP expired."
+    # Generate reset token
+    raw_token = secrets.token_urlsafe(32)
 
-    if otp_obj.attempts >= OTP_MAX_ATTEMPTS:
-        otp_obj.lock()
-        return False, "Too many attempts."
-
-    if not check_password(code, otp_obj.otp):
-        otp_obj.increment_attempts()
-        return False, "Invalid OTP."
-
-    updated = OTP.objects.filter(
-        id=otp_obj.id, #type: ignore
+    otp_instance = OTP.objects.filter(
+        user=user,
+        purpose=purpose,
         is_used=False
-    ).update(is_used=True)
+    ).latest("created_at")
 
-    if not updated:
-        return False, "OTP already used."
+    otp_instance.reset_token = make_password(raw_token)
+    otp_instance.reset_token_expires_at = timezone.now() + timezone.timedelta(minutes=OTP_EXPIRY_MINUTES)
+    otp_instance.save(update_fields=["reset_token"])
 
-    return True, "OTP verified."
+    return True, raw_token
+   
 
 @transaction.atomic
-def reset_password(email, new_password):
+def reset_password(email, new_password, reset_token):
     user = User.objects.filter(email=email).first()
     if not user:
         return False, "Invalid request."
 
+    otp_instance = OTP.objects.filter(
+        user=user,
+        purpose="password_reset",
+        is_used=False
+    ).latest("created_at")
+
+    if not otp_instance.reset_token:
+        return False, "Unauthorized."
+    
+    if otp_instance.is_reset_token_expired():
+        return False, "Reset token has expired."
+
+    if not check_password(reset_token, otp_instance.reset_token):
+        return False, "Invalid token."
+
     user.set_password(new_password)
     user.save(update_fields=["password"])
 
-    # Invalidate all remaining reset OTPs
-    OTP.objects.filter(
-        user=user,
-        is_used=False
-    ).update(is_used=True)
+    otp_instance.is_used = True
+    otp_instance.save(update_fields=["is_used"])
 
     return True, "Password reset successful."

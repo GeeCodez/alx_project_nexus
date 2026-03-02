@@ -16,13 +16,17 @@ class RegisterView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
 
     def perform_create(self, serializer):
-        user = AuthService.register_user(serializer)
+        AuthService.register_user(serializer.validated_data)
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
-        return Response({"message": "Registration successful. Please check your email for the OTP to verify your account."})
+
+        return Response(
+            {"message": "Registration successful. Please check your email for the OTP to verify your account."},
+            status=201
+        )
 
 class LoginView(generics.GenericAPIView):
     serializer_class = LoginSerializer

@@ -1,7 +1,7 @@
 from accounts.throttles import OTPThrottle
 from rest_framework import generics, permissions
 from rest_framework.response import Response
-from accounts.services.auth_services import AuthService
+from accounts.services.otp_services import AuthOTPService
 from accounts.serializers.otp_serializers import(
     VerifyOTPSerializer,
     ResendOTPSerializer
@@ -18,7 +18,7 @@ class VerifyOTPView(generics.GenericAPIView):
         email = serializer.validated_data["email"]
         code = serializer.validated_data["code"]
 
-        success, message = AuthService.verify_registration_otp(email,code)
+        success, message = OTPService.verify_registration_otp(email,code)
 
         if not success:
             return Response({"error": message}, status=400)
@@ -36,7 +36,7 @@ class ResendOTPView(generics.GenericAPIView):
 
         email = serializer.validated_data["email"]
 
-        allowed, data = AuthService.resend_registration_otp(email)
+        allowed, data = AuthOTPService.resend_registration_otp(email)
 
         if not allowed:
             return Response(

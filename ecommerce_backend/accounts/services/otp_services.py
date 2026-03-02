@@ -1,20 +1,20 @@
 from django.contrib.auth import get_user_model
-from accounts.utils import create_and_send_otp, verify_otp, check_otp_cooldown
+from accounts.utils import create_and_send_otp, verify_otp, resend_otp
 
 
 User = get_user_model()
-
-class OTPService:
+purpose="registration"
+class AuthOTPService:
     @staticmethod
     def send_registration_otp(email):
-        return create_and_send_otp(email)
+        return create_and_send_otp(email,purpose)
     
     @staticmethod
     def verify_registration_otp(email, code):
         """
         Verify OTP and activate user
         """
-        success, message = verify_otp(email, code)
+        success, message = verify_otp(email, code, purpose)
 
         if not success:
             return False, message
@@ -31,16 +31,5 @@ class OTPService:
 
     @staticmethod
     def resend_registration_otp(email):
-        """
-        Resend OTP with cooldown check
-        """
-        allowed, retry_after = check_otp_cooldown(email)
-
-        if not allowed:
-            return False, {
-                "error": "OTP recently sent",
-                "retry_after": retry_after
-            }
-
-        create_and_send_otp(email=email)
-        return True, {"message": "OTP resent successfully"}
+        #function defined in utils
+        resend_otp(email,purpose)

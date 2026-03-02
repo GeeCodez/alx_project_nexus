@@ -89,7 +89,3 @@ class User(AbstractBaseUser, PermissionsMixin):
                 name="unique_phone_when_not_null",
             ),
         ]
-
-
-
-

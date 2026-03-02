@@ -1,6 +1,6 @@
 from accounts.services.password_reset_service import request_password_reset,verify_password_reset_otp, reset_password
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, permissions
 from rest_framework.views import APIView
 from accounts.serializers.password_reset_serializers import (
     PasswordResetRequestSerializer,
@@ -10,6 +10,7 @@ from accounts.serializers.password_reset_serializers import (
 
 
 class PasswordResetRequestView(APIView):
+    permission_classes=[permissions.AllowAny]
 
     def post(self, request):
         serializer = PasswordResetRequestSerializer(data=request.data)
@@ -25,7 +26,7 @@ class PasswordResetRequestView(APIView):
         )
 
 class PasswordResetVerifyView(APIView):
-
+    permission_classes=[permissions.AllowAny]
     def post(self, request):
         serializer = PasswordResetVerifySerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -33,7 +34,7 @@ class PasswordResetVerifyView(APIView):
         email = serializer.validated_data["email"] #type:ignore
         otp = serializer.validated_data["otp"] #type:ignore
 
-        success, message = verify_password_reset_otp(email, otp)
+        success, message = verify_password_reset_otp(email, otp) # type: ignore
 
         if not success:
             return Response(
@@ -47,15 +48,16 @@ class PasswordResetVerifyView(APIView):
         )
 
 class PasswordResetConfirmView(APIView):
-
+    permission_classes=[permissions.AllowAny]
     def post(self, request):
         serializer = PasswordResetConfirmSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         email = serializer.validated_data["email"] #type:ignore
-        new_password = serializer.validated_data["new_password"] #type:ignore
+        new_password = serializer.validated_data["new_password"] # type: ignore
+        secret_token=serializer.validated_data["secret_token"] # type: ignore
 
-        success, message = reset_password(email, new_password)
+        success, message = reset_password(email, new_password, secret_token)
 
         if not success:
             return Response(
