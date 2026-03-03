@@ -32,9 +32,9 @@ class PasswordResetVerifyView(APIView):
         serializer.is_valid(raise_exception=True)
 
         email = serializer.validated_data["email"] #type:ignore
-        otp = serializer.validated_data["otp"] #type:ignore
+        code = serializer.validated_data["otp"] #type:ignore
 
-        success, message = verify_password_reset_otp(email, otp) # type: ignore
+        success, message = verify_password_reset_otp(email,code)
 
         if not success:
             return Response(
@@ -55,7 +55,7 @@ class PasswordResetConfirmView(APIView):
 
         email = serializer.validated_data["email"] #type:ignore
         new_password = serializer.validated_data["new_password"] # type: ignore
-        secret_token=serializer.validated_data["secret_token"] # type: ignore
+        secret_token=serializer.validated_data["reset_token"] # type: ignore
 
         success, message = reset_password(email, new_password, secret_token)
 

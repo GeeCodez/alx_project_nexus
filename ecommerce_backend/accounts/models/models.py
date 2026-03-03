@@ -21,8 +21,8 @@ class UserManager(BaseUserManager):
         if not password:
             raise ValueError("Password is required.")
 
-        # if not (email or phone_number):
-        #     raise ValueError("Either email or phone number is required.")
+        if not (email or phone_number):
+            raise ValueError("Either email or phone number is required.")
 
         if email:
             email = self.normalize_email(email)
@@ -80,12 +80,12 @@ class User(AbstractBaseUser, PermissionsMixin):
         constraints = [
             models.UniqueConstraint(
                 fields=["email"],
-                condition=~models.Q(email__isnull=False),
+                condition=models.Q(email__isnull=False),
                 name="unique_email_when_not_null",
             ),
             models.UniqueConstraint(
                 fields=["phone_number"],
-                condition=~models.Q(phone_number__isnull=False),
+                condition=models.Q(phone_number__isnull=False),
                 name="unique_phone_when_not_null",
             ),
         ]

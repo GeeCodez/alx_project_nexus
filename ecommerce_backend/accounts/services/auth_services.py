@@ -7,7 +7,7 @@ from accounts.services.otp_services import AuthOTPService
 from rest_framework_simplejwt.tokens import RefreshToken
 
 User = get_user_model()
-
+purpose="registration"
 class AuthService:
 
     @staticmethod
@@ -17,9 +17,8 @@ class AuthService:
         email = validated_data.get("email")
         phone = validated_data.get("phone_number")
         password = validated_data.pop("password")
-
         try:
-            user = User.objects.filter(username=username).first()
+            user = User.objects.filter(email=email).first()
 
             if user and user.is_active:
                 raise ValidationError(

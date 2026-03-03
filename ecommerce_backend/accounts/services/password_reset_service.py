@@ -5,7 +5,6 @@ from django.contrib.auth.hashers import make_password, check_password
 from django.db import transaction
 from accounts.utils import verify_otp,create_and_send_otp
 from accounts.models.otp_models import OTP
-from accounts.infrastructure.email_service import EmailService
 
 User = get_user_model()
 purpose="password_reset"
@@ -24,28 +23,21 @@ def request_password_reset(email):
     return create_and_send_otp(email,purpose)
 
 @transaction.atomic
-def verify_password_reset_otp(email, code, purpose='password_reset'):
+def verify_password_reset_otp(email: str, code: str, purpose: str = "password_reset") -> tuple[bool, str]:
     user = User.objects.filter(email=email).first()
     if not user:
         return False, "Invalid OTP."
 
-    success, message = verify_otp(email, code, purpose)
-
+    success, otp_or_message = verify_otp(email, code, purpose)
     if not success:
-        return False, message
+        return False, otp_or_message # type: ignore
 
-    # Generate reset token
+    otp_instance: OTP = otp_or_message  # type: ignore
+
     raw_token = secrets.token_urlsafe(32)
-
-    otp_instance = OTP.objects.filter(
-        user=user,
-        purpose=purpose,
-        is_used=False
-    ).latest("created_at")
-
-    otp_instance.reset_token = make_password(raw_token)
-    otp_instance.reset_token_expires_at = timezone.now() + timezone.timedelta(minutes=OTP_EXPIRY_MINUTES)
-    otp_instance.save(update_fields=["reset_token"])
+    otp_instance.reset_token = make_password(raw_token) # type: ignore
+    otp_instance.reset_token_expires_at = timezone.now() + timezone.timedelta(minutes=OTP_EXPIRY_MINUTES) # type: ignore
+    otp_instance.save(update_fields=["reset_token", "reset_token_expires_at"])
 
     return True, raw_token
    
@@ -56,20 +48,24 @@ def reset_password(email, new_password, reset_token):
     if not user:
         return False, "Invalid request."
 
-    otp_instance = OTP.objects.filter(
-        user=user,
-        purpose="password_reset",
-        is_used=False
-    ).latest("created_at")
+    otp_instance = (
+        OTP.objects.filter(
+            email=email,
+            purpose="password_reset",
+            reset_token__isnull=False
+        )
+        .order_by("-created_at")
+        .first()
+    )
 
-    if not otp_instance.reset_token:
-        return False, "Unauthorized."
-    
+    if not otp_instance:
+        return False, "Invalid or missing reset token."
+
     if otp_instance.is_reset_token_expired():
         return False, "Reset token has expired."
 
-    if not check_password(reset_token, otp_instance.reset_token):
-        return False, "Invalid token."
+    if not check_password(reset_token, otp_instance.reset_token): # type: ignore
+        return False, "Invalid reset token."
 
     user.set_password(new_password)
     user.save(update_fields=["password"])

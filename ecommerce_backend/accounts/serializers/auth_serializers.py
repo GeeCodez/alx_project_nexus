@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from accounts.models import User
-from accounts.services.auth_services import AuthService
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
 
@@ -9,12 +8,18 @@ class RegisterSerializer(serializers.ModelSerializer):
         fields = ("username", "email", "phone_number", "password")
 
     def validate(self, attrs):
+        # Normalize first
+        attrs["email"] = attrs.get("email") or None
+        attrs["phone_number"] = attrs.get("phone_number") or None
+
         username = attrs.get("username")
         email = attrs.get("email")
         phone = attrs.get("phone_number")
 
         if not username:
-            raise serializers.ValidationError({"username": "Username is required."})
+            raise serializers.ValidationError(
+                {"username": "Username is required."}
+            )
 
         if not (email or phone):
             raise serializers.ValidationError(

@@ -27,24 +27,23 @@ def create_and_send_otp(email, purpose):
         purpose=purpose,
         expires_at=expires_at,
     )
-    def send_email(email):
-        
+    def send_email():
         try:
-            EmailService.send_otp_email(email, code, purpose) # type: ignore
+            EmailService.send_otp_email(email=email, code=code, purpose=purpose)
         except Exception as e:
             return False, f"Failed to send OTP email to {email}: {e}"
     transaction.on_commit(send_email)    
     return True, "OTP has been sent"
     
 
-def verify_otp(email, code, purpose):
+def verify_otp(email: str, code: str, purpose: str) -> tuple[bool, "OTP|str"]:
     otp = OTP.objects.filter(
         email=email,
         purpose=purpose,
         is_used=False
     ).order_by("-created_at").first()
 
-    if not otp:
+    if otp is None:
         return False, "Invalid OTP"
 
     if otp.is_expired():
@@ -57,20 +56,17 @@ def verify_otp(email, code, purpose):
 
     if not check_password(str(code), otp.otp):
         otp.increment_attempts()
-        otp.save()
+        otp.save(update_fields=["attempts"])
         return False, "Invalid OTP"
-
     updated = OTP.objects.filter(
-        id=otp.id, #type:ignore
+        id=otp.id, # type: ignore
         is_used=False
     ).update(is_used=True)
 
     if not updated:
         return False, "OTP already used"
-    otp.save()
 
-    return True, "OTP verified"
-
+    return True, otp
 
 def check_otp_cooldown(email, purpose):
     last_otp = OTP.objects.filter(

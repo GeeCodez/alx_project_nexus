@@ -18,7 +18,7 @@ class VerifyOTPView(generics.GenericAPIView):
         email = serializer.validated_data["email"]
         code = serializer.validated_data["code"]
 
-        success, message = OTPService.verify_registration_otp(email,code)
+        success, message = AuthOTPService.verify_registration_otp(email,code)
 
         if not success:
             return Response({"error": message}, status=400)
