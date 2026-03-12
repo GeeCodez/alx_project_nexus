@@ -27,6 +27,7 @@ def create_and_send_otp(email, purpose):
         purpose=purpose,
         expires_at=expires_at,
     )
+    # making a simple change
     def send_email():
         try:
             EmailService.send_otp_email(email=email, code=code, purpose=purpose)
