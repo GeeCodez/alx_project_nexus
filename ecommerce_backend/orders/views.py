@@ -12,18 +12,14 @@ class OrderViewSet(mixins.ListModelMixin,mixins.RetrieveModelMixin,mixins.Create
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        if getattr(self, "swagger_fake_view", False):
-            return Order.objects.none()
+        user = self.request.user
+        order_items_qs = OrderItem.objects.select_related("product")
+
         return (
             Order.objects
-            .filter(user=self.request.user)
+            .filter(user=user)
             .select_related("user")
-            .prefetch_related(
-                Prefetch(
-                    "items",
-                    queryset=OrderItem.objects.select_related("product")
-                )
-            )
+            .prefetch_related(Prefetch("items", queryset=order_items_qs))
         )
 
     @action(detail=True, methods=["post"])

@@ -1,11 +1,7 @@
 from celery import shared_task
 from django.core.mail import send_mail
 from django.conf import settings
-from django.core.exceptions import ValidationError
-from django.db import transaction
-
 from .models import Order
-from products.models import Product
 
 @shared_task(bind=True, autoretry_for=(Exception,), retry_kwargs={"max_retries": 3, "countdown": 5})
 def send_order_confirmation_email(self, user_email, order_id):

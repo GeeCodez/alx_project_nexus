@@ -1,9 +1,6 @@
 from django.db import transaction
 from django.conf import settings
-from django.core.exceptions import ValidationError
-
 from .models import Order
-from products.models import Product
 from django.db import transaction
 from .tasks import send_shipping_email, send_delivery_email
 
