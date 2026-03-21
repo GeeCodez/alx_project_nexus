@@ -60,38 +60,35 @@ def verify_paystack_payment(reference):
 
 
 def process_paystack_webhook(event_data):
-    reference = event_data["data"]["reference"]
+    reference=event_data["data"]["reference"]
 
     try:
         with transaction.atomic():
-            payment = Payment.objects.select_for_update().get(reference=reference)
-            if payment.status == Payment.Status.SUCCESS:
+            payment=Payment.objects.select_for_update().get(reference=reference)
+            if payment.status==Payment.Status.SUCCESS:
                 return
 
-            verification = verify_paystack_payment(reference)
-            if verification["data"]["status"] == "success":
-                payment.status = Payment.Status.SUCCESS
-                payment.provider_response = verification
-                payment.save(update_fields=["status", "provider_response"])
+            verification=verify_paystack_payment(reference)
 
-                order = payment.order
-                order.status = "paid"
-                order.payment_reference = reference
-                order.save(update_fields=["status", "payment_reference"])
-                
-                email=order.user.email #type: ignore
+            if verification["data"]["status"]=="success":
+                payment.status=Payment.Status.SUCCESS
+                payment.provider_response=verification
+                payment.save(update_fields=["status","provider_response"])
+
+                order=payment.order
+                order.status="paid"
+                order.payment_reference=reference
+                order.save(update_fields=["status","payment_reference"])
+
+                email=order.user.email  # type: ignore
+
                 if email:
-                    send_order_confirmation_email.delay(
-                        user_email=email,
-                        order_id=order.id
-                    ) # type: ignore
-                else:
-                    pass
+                    transaction.on_commit(lambda: send_order_confirmation_email.delay(user_email=email,order_id=order.id))  # type: ignore
 
             else:
-                payment.status = Payment.Status.FAILED
-                payment.provider_response = verification
-                payment.save(update_fields=["status", "provider_response"])
+                payment.status=Payment.Status.FAILED
+                payment.provider_response=verification
+                payment.save(update_fields=["status","provider_response"])
 
     except Payment.DoesNotExist:
         return

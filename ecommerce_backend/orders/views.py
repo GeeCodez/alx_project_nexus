@@ -3,19 +3,11 @@ from rest_framework.viewsets import GenericViewSet
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
-
 from django.db.models import Prefetch
-
 from .models import Order, OrderItem
 from .serializers import OrderSerializer
-from .tasks import send_order_confirmation_email
 
-class OrderViewSet(
-    mixins.ListModelMixin,
-    mixins.RetrieveModelMixin,
-    mixins.CreateModelMixin,
-    GenericViewSet,
-):
+class OrderViewSet(mixins.ListModelMixin,mixins.RetrieveModelMixin,mixins.CreateModelMixin,GenericViewSet,):
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
 

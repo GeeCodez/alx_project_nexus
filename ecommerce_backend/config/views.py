@@ -1,23 +1,18 @@
-# core/views.py
-from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
-
+from rest_framework import serializers
+from rest_framework.views import APIView
+class APIRootSerializer(serializers.Serializer):
+    name=serializers.CharField()
 class APIRootView(APIView):
     permission_classes = [AllowAny]
-    
+    serializer_class = APIRootSerializer 
 
     def get(self, request, *args, **kwargs):
-        """
-        Return the main API endpoints as JSON.
-        """
         return Response({
-            "swagger": request.build_absolute_uri("/swagger/"),
-            "redoc": request.build_absolute_uri("/redoc/"),
+            "admin":request.build_absolute_uri("/admin/"),
             "products": request.build_absolute_uri("/api/products/"),
             "orders": request.build_absolute_uri("/api/orders/"),
             "payments": request.build_absolute_uri("/api/payments/"),
             "accounts": request.build_absolute_uri("/api/accounts/"),
-            "categories": request.build_absolute_uri("/api/categories/"),
-            # "docs": request.build_absolute_uri("/docs/"),
         })

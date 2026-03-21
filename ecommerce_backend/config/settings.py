@@ -14,7 +14,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY =os.getenv('SECRET_KEY')
 
-DEBUG = os.getenv('DEBUG',)
+DEBUG = os.getenv('DEBUG','')!="False"
 
 ALLOWED_HOSTS = ["*"]
 
@@ -31,7 +31,6 @@ INSTALLED_APPS = [
 
     'accounts',
     'rest_framework',
-    'drf_yasg',
     'phonenumber_field',
     'django_filters',
     'products.apps.ProductsConfig',

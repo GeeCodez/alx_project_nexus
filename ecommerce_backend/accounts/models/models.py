@@ -21,8 +21,8 @@ class UserManager(BaseUserManager):
         if not password:
             raise ValueError("Password is required.")
 
-        if not (email or phone_number):
-            raise ValueError("Either email or phone number is required.")
+        # if not (email or phone_number):
+        #     raise ValueError("Either email or phone number is required.")
 
         if email:
             email = self.normalize_email(email)

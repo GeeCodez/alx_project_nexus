@@ -1,7 +1,8 @@
+import requests
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 import json
 
 from orders.models import Order
@@ -11,6 +12,13 @@ from .services import verify_paystack_signature, process_paystack_webhook
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 
+class RootView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, format=None):
+        return Response({
+            "Root view for payments"
+        })
 
 class InitializePaymentAPIView(APIView):
     permission_classes = [IsAuthenticated]
