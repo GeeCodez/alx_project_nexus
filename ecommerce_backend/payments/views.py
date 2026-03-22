@@ -28,9 +28,11 @@ class InitializePaymentAPIView(APIView):
         serializer.is_valid(raise_exception=True)
 
         order_id = serializer.validated_data["order_id"] # type: ignore
+        
+        user=request.user or None
 
         try:
-            order = Order.objects.get(id=order_id, user=request.user)
+            order = Order.objects.get(id=order_id, user=user)
         except Order.DoesNotExist:
             return Response(
                 {"detail": "Order not found"},
@@ -43,7 +45,10 @@ class InitializePaymentAPIView(APIView):
                 {"detail": "Order cannot be paid for"},
                 status=status.HTTP_400_BAD_REQUEST
             )
-
+        if not user:
+            email="user_{order.person_name}@noauth.geezapp.com"
+        email=user.email or f"user_{user.id}@noemail.geezapp.com"
+        
         payment, authorization_url = initialize_paystack_payment(
             order=order,
             user=request.user,

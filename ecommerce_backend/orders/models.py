@@ -5,6 +5,7 @@ from decimal import Decimal
 from django.core.exceptions import ValidationError
 from products.models import Product
 from phonenumber_field.modelfields import PhoneNumberField
+import uuid
 
 
 
@@ -20,7 +21,7 @@ class Order(models.Model):
 
     STATUS_TRANSITIONS = {
         Status.PENDING: [Status.PAID, Status.CANCELLED],
-        Status.PAID: [Status.PROCESSING, Status.CANCELLED],
+        Status.PAID: [Status.PROCESSING], # cancelled logic to be added soon
         Status.PROCESSING: [Status.SHIPPED],
         Status.SHIPPED: [Status.DELIVERED],
         Status.DELIVERED: [],
@@ -28,10 +29,11 @@ class Order(models.Model):
     }
 
     id = models.BigAutoField(primary_key=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="orders")
-    # phone_number=PhoneNumberField(max_length=20,null=True, blank=True) # for unauthenticated users
-    # person_name=models.CharField(max_length=50,null=True,blank=True) # for unauthenticated users
-    # pick_up_point=models.CharField(max_length=100,null=True,blank=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="orders")
+    phone_number=PhoneNumberField(max_length=20,null=True, blank=True)
+    person_name=models.CharField(max_length=50,null=True,blank=True) 
+    pick_up_point=models.CharField(max_length=100,null=True,blank=True)
+    tracking_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False, db_index=True,null=True,blank=True)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING, db_index=True)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))
     currency = models.CharField(max_length=10, default="GHS")

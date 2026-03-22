@@ -14,7 +14,7 @@ class OrderItemInline(admin.TabularInline):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ("id", "user", "status", "total_amount", "currency", "payment_reference", "created_at")
+    list_display = ("id", "user", "status", "total_amount", "currency", "payment_reference", "created_at","tracking_token")
     list_filter = ("status", "currency", "created_at")
     search_fields = ("id", "user__email", "payment_reference")
     ordering = ("-created_at",)

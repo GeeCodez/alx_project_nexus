@@ -43,3 +43,24 @@ def send_delivery_email(self, order_id):
             fail_silently=False,
         )
 
+@shared_task(bind=True, autoretry_for=(Exception,), retry_kwargs={"max_retries": 3, "countdown": 5})
+def build_order_tracking_email(order):
+    subject = "Your Order Tracking Details"
+
+    message = f"""
+Hello {order.person_name or "Customer"},
+Thank you for your order.
+Your order has been successfully placed.
+Order ID: {order.id}
+Tracking Token: {order.tracking_token}
+
+IMPORTANT:
+Please store this tracking token securely. You will need it to check your order status.
+You can track your order using this token via our platform.
+Thank you for shopping with us.
+
+Best regards,
+Gee.
+"""
+
+    return subject, message
